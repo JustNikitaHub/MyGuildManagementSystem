@@ -1,0 +1,18 @@
+## .NET ##
+*.swp
+*.[Aa]ssemblies.[Dd]ebug
+obj/
+[Bb]in/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.ide/
+.vs/
+*.csproj.user
+*.db
+*.db-shm
+*.db-wal
+Migrations/
+*.sqlite
+appsettings.Development.json
