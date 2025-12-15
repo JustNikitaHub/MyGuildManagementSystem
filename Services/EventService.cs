@@ -1,5 +1,8 @@
+using GuildManagement.Data;
+using GuildManagement.DTOs;
 using GuildManagement.Entities;
 using GuildManagement.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace GuildManagement.Services
 {
@@ -7,11 +10,13 @@ namespace GuildManagement.Services
     {
         private readonly IEventRepository _eventRepository;
         private readonly IAchievementRepository _achievementRepository;
+        private readonly GuildManagementContext _context;
 
-        public EventService(IEventRepository eventRepository, IAchievementRepository achievementRepository)
+        public EventService(IEventRepository eventRepository, IAchievementRepository achievementRepository, GuildManagementContext context)
         {
             _eventRepository = eventRepository;
             _achievementRepository = achievementRepository;
+            _context = context;
         }
 
         public async Task<List<Event>> GetAllEvents()
@@ -102,6 +107,136 @@ namespace GuildManagement.Services
             }
 
             return await _eventRepository.CompleteEvent(eventId, achievementId);
+        }
+
+        //новое
+        public async Task<List<EventDTO>> GetAllEventsDTO()
+        {
+            var events = await _context.Events
+                .Include(e => e.Member)
+                .Include(e => e.Achievement)
+                .ToListAsync();
+
+            return events.Select(ConvertToDTO).ToList();
+        }
+
+        public async Task<EventDTO?> GetEventDTOById(int id)
+        {
+            var eventEntity = await _context.Events
+                .Include(e => e.Member)
+                .Include(e => e.Achievement)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            return eventEntity != null ? ConvertToDTO(eventEntity) : null;
+        }
+
+        public async Task<EventDTO> CreateEventDTO(CreateEventDTO eventDto)
+        {
+            var member = await _context.Members.FindAsync(eventDto.MemberId);
+            if (member == null)
+            {
+                throw new ArgumentException("Участник не найден");
+            }
+
+            if (!Enum.TryParse<EventType>(eventDto.Type, out var eventType))
+            {
+                throw new ArgumentException("Неверный тип события");
+            }
+
+            var eventEntity = new Event
+            {
+                Title = eventDto.Title,
+                Description = eventDto.Description,
+                Type = eventType,
+                StartDate = eventDto.StartDate,
+                EndDate = eventDto.StartDate.AddHours(2),
+                MemberId = eventDto.MemberId
+            };
+            var createdEvent = await _eventRepository.Add(eventEntity);
+
+            return ConvertToDTO(createdEvent);
+        }
+
+        public async Task<EventDTO> UpdateEventDTO(int id, CreateEventDTO eventDto)
+        {
+            var existingEvent = await _eventRepository.GetById(id);
+            if (existingEvent == null)
+            {
+                throw new ArgumentException("Событие не найдено");
+            }
+
+            var member = await _context.Members.FindAsync(eventDto.MemberId);
+            if (member == null)
+            {
+                throw new ArgumentException("Участник не найден");
+            }
+
+            if (!Enum.TryParse<EventType>(eventDto.Type, out var eventType))
+            {
+                throw new ArgumentException("Неверный тип события");
+            }
+
+            existingEvent.Title = eventDto.Title;
+            existingEvent.Description = eventDto.Description;
+            existingEvent.Type = eventType;
+            existingEvent.StartDate = eventDto.StartDate;
+            existingEvent.EndDate = eventDto.StartDate.AddHours(2);
+            existingEvent.MemberId = eventDto.MemberId;
+            var updatedEvent = await _eventRepository.Update(existingEvent);
+
+            return ConvertToDTO(updatedEvent);
+        }
+        public async Task<List<EventDTO>> GetEventsByMemberIdDTO(int memberId)
+        {
+            var events = await _context.Events
+                .Where(e => e.MemberId == memberId)
+                .Include(e => e.Member)
+                .ToListAsync();
+
+            return events.Select(ConvertToDTO).ToList();
+        }
+
+        public async Task<List<EventDTO>> GetUpcomingEventsDTO()
+        {
+            var events = await _context.Events
+                .Where(e => e.StartDate > DateTime.Now)
+                .Include(e => e.Member)
+                .OrderBy(e => e.StartDate)
+                .ToListAsync();
+
+            return events.Select(ConvertToDTO).ToList();
+        }
+
+        public async Task<List<EventDTO>> GetEventsByTypeDTO(string eventType)
+        {
+            if (!Enum.TryParse<EventType>(eventType, out var eventTypeEnum))
+            {
+                throw new ArgumentException("Неверный тип события");
+            }
+
+            var events = await _context.Events
+                .Where(e => e.Type == eventTypeEnum)
+                .Include(e => e.Member)
+                .ToListAsync();
+
+            return events.Select(ConvertToDTO).ToList();
+        }
+
+        private EventDTO ConvertToDTO(Event eventEntity)
+        {
+            return new EventDTO
+            {
+                Id = eventEntity.Id,
+                Title = eventEntity.Title,
+                Description = eventEntity.Description,
+                Type = eventEntity.Type.ToString(),
+                StartDate = eventEntity.StartDate,
+                EndDate = eventEntity.EndDate,
+                MemberId = eventEntity.MemberId,
+                MemberName = eventEntity.Member?.Name,
+                AchievementId = eventEntity.Achievement?.Id,
+                AchievementTitle = eventEntity.Achievement?.Title
+            };
         }
     }
 }

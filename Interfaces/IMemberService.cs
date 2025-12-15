@@ -1,3 +1,4 @@
+using GuildManagement.DTOs;
 using GuildManagement.Entities;
 
 namespace GuildManagement.Interfaces
@@ -13,5 +14,13 @@ namespace GuildManagement.Interfaces
         Task<List<Member>> GetMembersByClass(MemberClass memberClass);
         Task<bool> ChangeMemberLevel(int memberId, int newLevel);
         Task<Member> UpdateLastActive(int memberId);
+
+        //новое
+        Task<List<MemberDTO>> GetAllMembersDTO();
+        Task<MemberDTO?> GetMemberDTOById(int id);
+        Task<MemberDTO> CreateMemberDTO(CreateMemberDTO memberDto);
+        Task<MemberDTO> UpdateMemberDTO(int id, CreateMemberDTO memberDto);
+        Task<List<MemberDTO>> GetMembersByLevelDTO(int minLevel, int maxLevel);
+        Task<List<MemberDTO>> GetMembersByClassDTO(string memberClass);
     }
 }

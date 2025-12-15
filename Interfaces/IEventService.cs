@@ -1,3 +1,4 @@
+using GuildManagement.DTOs;
 using GuildManagement.Entities;
 
 namespace GuildManagement.Interfaces
@@ -15,5 +16,14 @@ namespace GuildManagement.Interfaces
         Task<List<Event>> GetUpcomingEvents();
         Task<List<Event>> GetEventsByDateRange(DateTime start, DateTime end);
         Task<bool> CompleteEvent(int eventId, Achievement? achievement = null);
+
+        //новое
+        Task<List<EventDTO>> GetAllEventsDTO();
+        Task<EventDTO?> GetEventDTOById(int id);
+        Task<EventDTO> CreateEventDTO(CreateEventDTO eventDto);
+        Task<EventDTO> UpdateEventDTO(int id, CreateEventDTO eventDto);
+        Task<List<EventDTO>> GetEventsByMemberIdDTO(int memberId);
+        Task<List<EventDTO>> GetUpcomingEventsDTO();
+        Task<List<EventDTO>> GetEventsByTypeDTO(string eventType);
     }
 }
