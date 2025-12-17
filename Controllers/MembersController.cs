@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using GuildManagement.Data;
 using GuildManagement.Entities;
 using GuildManagement.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GuildManagement.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MembersController : ControllerBase
     {
         private readonly GuildManagementContext _context;
@@ -17,6 +19,7 @@ namespace GuildManagement.Controllers
             _context = context;
         }
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<MemberDTO>>> GetMembers()
         {
             var members = await _context.Members
@@ -42,6 +45,7 @@ namespace GuildManagement.Controllers
             return Ok(memberDTOs);
         }
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<MemberDTO>> GetMember(int id)
         {
             var member = await _context.Members
@@ -73,6 +77,7 @@ namespace GuildManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<MemberDTO>> PostMember(CreateMemberDTO createMemberDTO)
         {
             if (!Enum.TryParse<MemberClass>(createMemberDTO.MemberClass, out var memberClass))
@@ -101,6 +106,7 @@ namespace GuildManagement.Controllers
             return CreatedAtAction(nameof(GetMember), new { id = member.Id }, memberDTO);
         }
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> PutMember(int id, CreateMemberDTO createMemberDTO)
         {
             var member = await _context.Members.FindAsync(id);
@@ -137,6 +143,7 @@ namespace GuildManagement.Controllers
             return NoContent();
         }
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> DeleteMember(int id)
         {
             var member = await _context.Members.FindAsync(id);
@@ -173,6 +180,7 @@ namespace GuildManagement.Controllers
             return Ok(memberDTOs);
         }
         [HttpPut("{id}/level")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> ChangeMemberLevel(int id, [FromBody] int newLevel)
         {
             if (newLevel < 1 || newLevel > 60)

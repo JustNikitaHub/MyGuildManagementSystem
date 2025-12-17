@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using GuildManagement.Entities;
 
 namespace GuildManagement.Data
 {
-    public class GuildManagementContext : DbContext
+    public class GuildManagementContext : IdentityDbContext<ApplicationUser>
     {
         public GuildManagementContext(DbContextOptions<GuildManagementContext> options) : base(options)
         {
@@ -16,7 +17,7 @@ namespace GuildManagement.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Member>(entity =>
             {
                 entity.HasKey(m => m.Id);
