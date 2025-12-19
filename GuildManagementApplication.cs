@@ -157,3 +157,4 @@ app.MapControllers();
 app.MapGet("/", () => "Guild Management API работает с аутентификацией!");
 
 app.Run();
+public partial class Program { }
